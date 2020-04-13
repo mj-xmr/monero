@@ -244,6 +244,9 @@ namespace config
   const char HASH_KEY_MESSAGE_SIGNING[] = "MoneroMessageSignature";
   const unsigned char HASH_KEY_ENCRYPTED_CHUNK_KEY = 0x8e;
   const unsigned char HASH_KEY_ENCRYPTED_CHUNK_IV = 0x8f;
+  const char HASH_KEY_TRIPTYCH_H[] = "triptych H";
+  const char HASH_KEY_TRIPTYCH_U[] = "triptych U";
+  const char HASH_KEY_TRIPTYCH_TRANSCRIPT[] = "triptych transcript";
 
   namespace testnet
   {
