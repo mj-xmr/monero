@@ -86,6 +86,7 @@ namespace cryptonote
   bool add_recipient_private_data_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string& chunk, bool encrypted);
   bool encrypt_recipient_private_data(std::string &data, const crypto::public_key &pkey, const crypto::secret_key &skey, hw::device &hwdev);
   bool decrypt_recipient_private_data(std::string &data, const crypto::public_key &pkey, const crypto::secret_key &skey, hw::device &hwdev);
+  bool add_mm_merkle_root_to_tx_extra(std::vector<uint8_t>& tx_extra, const crypto::hash& mm_merkle_root, size_t mm_merkle_tree_depth);
   bool remove_field_from_tx_extra(std::vector<uint8_t>& tx_extra, const std::type_info &type);
   void set_payment_id_to_tx_extra_nonce(blobdata& extra_nonce, const crypto::hash& payment_id);
   void set_encrypted_payment_id_to_tx_extra_nonce(blobdata& extra_nonce, const crypto::hash8& payment_id);

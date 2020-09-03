@@ -247,6 +247,8 @@ namespace config
   const char HASH_KEY_TRIPTYCH_H[] = "triptych H";
   const char HASH_KEY_TRIPTYCH_U[] = "triptych U";
   const char HASH_KEY_TRIPTYCH_TRANSCRIPT[] = "triptych transcript";
+  const char HASH_KEY_TRIPTYCH_PLACEHOLDER_KEY_IMAGE[] = "tpki";
+  const unsigned char HASH_KEY_MM_SLOT = 'm';
 
   namespace testnet
   {
