@@ -60,13 +60,13 @@ private:
 private:
 
   //returns true if heap[i] < heap[j]
-  bool mmless(int i, int j) const
+  constexpr bool mmless(int i, int j) const
   {
     return data[heap[i]] < data[heap[j]];
   }
 
   //swaps items i&j in heap, maintains indexes
-  bool mmexchange(int i, int j)
+  constexpr bool mmexchange(int i, int j)
   {
     const int t = heap[i];
     heap[i] = heap[j];
@@ -77,13 +77,13 @@ private:
   }
 
   //swaps items i&j if i<j;  returns true if swapped
-  bool mmCmpExch(int i, int j)
+  constexpr bool mmCmpExch(int i, int j)
   {
      return mmless(i, j) && mmexchange(i, j);
   }
 
   //maintains minheap property for all items below i.
-  void minSortDown(int i)
+  constexpr void minSortDown(int i)
   {
     for (i *= 2; i <= minCt; i *= 2)
     {
@@ -95,7 +95,7 @@ private:
   }
 
   //maintains maxheap property for all items below i. (negative indexes)
-  void maxSortDown(int i)
+  constexpr void maxSortDown(int i)
   {
     for (i *= 2; i >= -maxCt; i *= 2)
     {
@@ -108,7 +108,7 @@ private:
 
   //maintains minheap property for all items above i, including median
   //returns true if median changed
-  bool minSortUp(int i)
+  constexpr bool minSortUp(int i)
   {
     while (i > 0 && mmCmpExch(i, i / 2))
       i /= 2;
@@ -117,7 +117,7 @@ private:
 
   //maintains maxheap property for all items above i, including median
   //returns true if median changed
-  bool maxSortUp(int i)
+  constexpr bool maxSortUp(int i)
   {
      while (i < 0 && mmCmpExch(i / 2, i))
        i /= 2;
@@ -172,7 +172,7 @@ public:
     }
   }
 
-  int size() const
+  constexpr int size() const
   {
     return sz;
   }
