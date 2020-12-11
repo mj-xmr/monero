@@ -28,6 +28,7 @@ hyperlink_format = '<a href="{link}">{text}</a>'
 class Tool:
     def __init__(self, name, alias, artifacts=[]):
         self.name = name
+        self.path = os.path.join("utils", "health", name)
         self.alias = alias
         if isinstance(artifacts, str):
             self.artifacts = [artifacts]
@@ -90,15 +91,23 @@ class Checkout:
         self.date = date
         self.tool_results = tool_results
 
-tools = [
+TOOLS_PROD = [
         LOC()       # Light
-    #,   CBA()       # Heavy
-    #,   IWYU()
-    #,   Tidy()
-    ,   Files()     # Light
-    ,   Failing()   # Test failing
-    #,   Valgrind()  # TODO
+    ,   CBA()       # Heavy
+    ,   IWYU()
+    ,   Tidy()
+    ,   Failing()   # Test handling of failing report
+    #,   Doxygen()  # TODO
+    #,   Valgrind() # TODO
     ]
+
+TOOLS_TESTING = [
+        LOC()       # Light
+    ,   Files()     # Light
+    ,   Failing()   # Test handling of failing report
+    ]
+
+TOOLS = []
    
 
 def GetDirThis():
@@ -109,11 +118,13 @@ def GetParser():
     parser.add_argument('-t', '--threads', default=1, type=int, help="Number of threads. 0 means use all cores.")
     parser.add_argument('-n', '--num-back', default=5, type=int, help="How many checkouts from head")
     parser.add_argument('-c', '--disable-cache', default=False, action='store_true', help="Disable cache")
+    parser.add_argument('-s', '--tools-testing', default=False, action='store_true', help="Use only the testing tools")
 
     return parser
 
 def GetResultsForTool(tool):
-    pathTool = os.path.join(GetDirThis(), tool.name)
+    #pathTool = os.path.join(GetDirThis(), tool.name)
+    pathTool = tool.path
     result = subprocess.run([pathTool], stdout=subprocess.PIPE)
     
     if result.returncode != 0:
@@ -186,7 +197,7 @@ def GetResultsForCheckout(args, git_hash):
     
     if args.threads == 1:
         # No parallelism requested (important for debugging!)
-        for tool in tools:
+        for tool in TOOLS:
             kpis = LoopIter(args, git_hash, tool)
             tool_results.append(kpis)
             
@@ -199,7 +210,7 @@ def GetResultsForCheckout(args, git_hash):
             num_threads = args.threads
         
         data_in = []
-        for tool in tools:
+        for tool in TOOLS:
             data_in.append((args, git_hash, tool))
         print("Starting", num_threads, "threads.")
         with multiprocessing.Pool(processes=num_threads) as pool:
@@ -243,7 +254,7 @@ def GetReports(table, header):
     return rep_html, rep_text
 
 def ReplaceTitleLink(rep_html):
-    for tool in tools:
+    for tool in TOOLS:
         name = tool.alias
         link = dirImgRel + GetFilenameToolPNG(name)
         rep_html = rep_html.replace(name + TAG_PLOT, hyperlink_format.format(link=link, text=name))
@@ -258,8 +269,8 @@ def ReplaceStyle(rep_html):
 def ReplaceToolsCells(checkouts, rep_html):
     for chk in checkouts:        
         for itool, kpis in enumerate(chk.tool_results):
-            tool_key = tools[itool].alias
-            tool = tools[itool]
+            tool_key = TOOLS[itool].alias
+            tool = TOOLS[itool]
             cell = tool.GetCell(chk.git_hash, kpis)            
             key = GetToolHashKey(chk.git_hash, tool_key)
             rep_html = rep_html.replace(key, cell)
@@ -270,7 +281,7 @@ def CreateHeader():
     header = []
     header.append("Commit")
     header.append("Date")
-    for tool in tools:
+    for tool in TOOLS:
         name = tool.alias
         header.append(name + TAG_PLOT)
     return header
@@ -283,7 +294,7 @@ def CreateTable(checkouts):
         row.append(chk.git_hash)
         row.append(chk.date)
         
-        for tool in tools:
+        for tool in TOOLS:
             tool_key = tool.alias
             row.append(GetToolHashKey(chk.git_hash, tool_key))
             
@@ -296,7 +307,7 @@ def GetKPIs(checkouts):
     for chk in checkouts:       
         for itool, result in enumerate(chk.tool_results):
             kpis = []
-            tool_key = tools[itool].alias
+            tool_key = TOOLS[itool].alias
             for res in result.split():
                 try:
                     kpi = int(res)
@@ -323,23 +334,31 @@ def MakeReport(checkouts):
     rep_html = ReplaceTitleLink(rep_html)
     rep_html = ReplaceStyle(rep_html)
     rep_html = ReplaceToolsCells(checkouts, rep_html)
+    
+    #print(rep)
+    print(rep_text)
 
     file_name_rep = dirOut + "/index.html"
     with open(file_name_rep, 'w') as out:
         out.writelines(rep_html)
         print("Wrote report to:\n" + os.path.abspath(file_name_rep))
-    #print(rep)
-    print(rep_text)
     
 def FormatMinutes(seconds):
     return "{}".format(round(seconds / 60, 2))
 
 def Main():
+    global TOOLS
+    
     for dir_ini in (dirOut, dirImg, dirData):
         os.makedirs(dir_ini, exist_ok=True)
     
     parser = GetParser()
     args = parser.parse_args()
+    
+    if args.tools_testing:
+        TOOLS = TOOLS_TESTING
+    else:
+        TOOLS = TOOLS_PROD
     
     checkouts = []
 
