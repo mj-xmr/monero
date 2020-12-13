@@ -38,6 +38,9 @@ class Tool:
     def GetKPIs(self, res):
         return res
     
+    def IsSingleThreaded(self):
+        return False
+    
     def GetCell(self, git_hash, kpis):
         cell = ''
         for iart, artifact in enumerate(self.artifacts):
@@ -61,6 +64,8 @@ class Files(Tool):
         super().__init__('files.sh', 'files', 
                          ['build/files.txt'
                          ,'build/files2.txt'])
+    def IsSingleThreaded(self):
+        return True
     
 class Failing(Tool):
     def __init__(self):
@@ -71,6 +76,9 @@ class CBA(Tool):
         super().__init__('clang-build-time-analyzer-run.sh', 'cbta', 
                          ['build/clang-build-analyser/cba-result.txt'
                          ,'build/clang-build-analyser/cba-trace.txt.gz'])
+        
+    def IsSingleThreaded(self):
+        return True
         
 
 class Tidy(Tool):
@@ -95,7 +103,7 @@ TOOLS_PROD = [
         LOC()       # Light
     ,   CBA()       # Heavy
     ,   IWYU()
-    ,   Tidy()
+    ,   Tidy()      # TODO: Disperse into C and CXX separately
     ,   Failing()   # Test handling of failing report
     #,   Doxygen()  # TODO
     #,   Valgrind() # TODO
@@ -123,8 +131,8 @@ def GetParser():
     return parser
 
 def GetResultsForTool(tool):
-    #pathTool = os.path.join(GetDirThis(), tool.name)
-    pathTool = tool.path
+    pathTool = os.path.join(GetDirThis(), tool.name)
+    #pathTool = tool.path
     result = subprocess.run([pathTool], stdout=subprocess.PIPE)
     
     if result.returncode != 0:
@@ -209,12 +217,21 @@ def GetResultsForCheckout(args, git_hash):
             # Use the selected number of cores
             num_threads = args.threads
         
+        # Start the multithreaded tools
         data_in = []
         for tool in TOOLS:
-            data_in.append((args, git_hash, tool))
+            if not tool.IsSingleThreaded():
+                data_in.append((args, git_hash, tool))
         print("Starting", num_threads, "threads.")
         with multiprocessing.Pool(processes=num_threads) as pool:
             tool_results = pool.starmap(LoopIter, data_in)
+        
+        # Start the single threaded tools
+        print("Starting single threaded tools")
+        for tool in TOOLS:
+            if tool.IsSingleThreaded():
+                kpis = LoopIter(args, git_hash, tool)
+                tool_results.append(kpis)
             
     return tool_results
 
