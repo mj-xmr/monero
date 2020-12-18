@@ -28,49 +28,12 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 # THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Include What You Use analyses the complexity of your header hierarchy and proposes optimisations.
-# User documentation:
-# https://github.com/include-what-you-use/include-what-you-use/blob/master/README.md
+# clang-tidy runs lint checks on C & C++ sources and headers.
+# Run this script from the source directory.
 
-# Build variables
-PROG="include-what-you-use"
-PROG_SHORT="iwyu"
-DIR_BUILD="build/clang-$PROG_SHORT"
+DIR_THIS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-RESULT="$PROG_SHORT-result.txt"
+source "$DIR_THIS/clang-tidy-run-common.sh"
 
-if hash "$PROG"; then
-	echo "Found: $PROG"
-else
-	echo "Couldn't find: $PROG"
-	echo "Please run the below command to install $PROG:"
-	echo "sudo apt install $PROG_SHORT"
-	exit 1
-fi
+tidy_for_language "CXX"
 
-mkdir -p "$DIR_BUILD" && cd "$DIR_BUILD"
-rm `find . -name "CMakeCache.txt"` || true
-
-UWYU_COMMAND="$PROG;-Xiwyu;any;-Xiwyu;iwyu;-Xiwyu;args" # Copy-pasted from the user docs.
-	
-cmake ../.. \
--DCMAKE_C_COMPILER=clang \
--DCMAKE_CXX_COMPILER=clang++ \
--DUSE_CCACHE=ON \
--DCMAKE_C_INCLUDE_WHAT_YOU_USE="$UWYU_COMMAND" \
--DCMAKE_CXX_INCLUDE_WHAT_YOU_USE="$UWYU_COMMAND" \
--DBUILD_SHARED_LIBS=ON \
--DBUILD_TESTS=ON \
--DBoost_INCLUDE_DIR="/home/enjo/devel/lib/tree/include"
-
-make clean					# Clean up to generate the full report
-time make -k 2>&1 | tee "$RESULT"		# Run the scan. -k means: ignore errors
-#time make -k generate_translations_header 2>&1 | tee "$RESULT"	# Quick testing: build a single target
-KPI=$(cat "$RESULT" | wc -l)
-tar -cJvf "$RESULT.txz" "$RESULT"		# Zip the result, because it's huge.
-rm -v "$RESULT"
-
-echo ""
-echo "Readable result stored in: $DIR_BUILD/$RESULT.txz"
-
-echo "$KPI" > "kpis.txt"

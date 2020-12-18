@@ -40,6 +40,7 @@ function tidy_for_language() {
 	RESULT="${RESULT_BASE}-${LANG}.txt"
 
 	mkdir -p "$DIR_BUILD" && pushd "$DIR_BUILD"
+	rm `find . -name "CMakeCache.txt"` || true
 
 	cmake ../.. \
 	-DCMAKE_C_COMPILER=clang \
@@ -47,19 +48,21 @@ function tidy_for_language() {
 	-DUSE_CCACHE=ON \
 	-DUSE_CLANG_TIDY_${LANG}=ON \
 	-DBUILD_SHARED_LIBS=ON \
-	-DBUILD_TESTS=ON
+	-DBoost_INCLUDE_DIR="/home/enjo/devel/lib/tree/include" \
+	-DBUILD_TESTS=ON 2>&1 /dev/null
 
 	make clean 					# Clean up, so that the result can be regenerated from scratch
 	time make -k 2>&1 | tee "$RESULT"		# Build and store the result. -k means: ignore errors
 	#time make -k easylogging 2>&1 | tee "$RESULT"	# Quick testing: build a single target
-	gzip -f "$RESULT" # Zip the result, because it's huge. -f overwrites the previously generated result
-
+	KPI=$(cat "$RESULT" | wc -l)
+	tar -cJvf "$RESULT.txz" "$RESULT"		# Zip the result, because it's huge.
+	rm -v "$RESULT"
 	echo ""
-	echo "Readable result stored in: $DIR_BUILD/$RESULT.gz"
+	echo "Readable result stored in: $DIR_BUILD/$RESULT.txz"
 
+	echo "$KPI" > "kpis.txt"
+	
 	popd
 }
 
-tidy_for_language "C"
-tidy_for_language "CXX"
 

@@ -52,6 +52,7 @@ else
 fi
 
 mkdir -p "$DIR_BUILD" && cd "$DIR_BUILD"
+rm `find . -name "CMakeCache.txt"` || true
 
 cmake ../.. \
 -DCMAKE_C_COMPILER=clang \
@@ -59,7 +60,8 @@ cmake ../.. \
 -DUSE_CCACHE=OFF \
 -DUSE_COMPILATION_TIME_PROFILER=ON \
 -DBUILD_SHARED_LIBS=ON \
--DBUILD_TESTS=ON
+-DBoost_INCLUDE_DIR="/home/enjo/devel/lib/tree/include" \
+-DBUILD_TESTS=ON 2>&1 /dev/null
 
 make clean 				# Clean up, so that the trace can be regenerated from scratch
 $PROG_PATH --start $DIR_MONITORED	# Start monitoring
@@ -67,9 +69,16 @@ time make 				# Build
 #time make easylogging			# Quick testing: build a single target
 $PROG_PATH --stop $DIR_MONITORED $TRACE	# Stop and output to trace file
 $PROG_PATH --analyze $TRACE | tee $RESULT # Analyze the trace, and store it in a readable format
-gzip -f $TRACE # Zip the trace, because it's huge. -f overwrites the previously generated trace
+
+tar -cJvf "$TRACE.txz" "$TRACE"		# Zip the result, because it's huge.
+rm -v "$TRACE"
+
+KPI_TIME_PARSING=$(cat $RESULT | grep Parsing | awk '{print $3}')
+KPI_TIME_CODEGEN=$(cat $RESULT | grep Codegen | awk '{print $5}')
+
+echo "$KPI_TIME_PARSING $KPI_TIME_CODEGEN" > "kpis.txt"
 
 echo ""
 echo "Readable result stored in: $DIR_BUILD/$RESULT"
-echo "The trace (analyser's input data) in: $DIR_BUILD/$TRACE.gz"
+echo "The trace (analyser's input data) in: $DIR_BUILD/$TRACE.txz"
 
