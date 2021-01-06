@@ -10,7 +10,7 @@ import subprocess
 import shutil
 import ntpath
 import time
-#import multiprocessing
+import multiprocessing
 
 from matplotlib import pyplot as plt
 from tabulate import tabulate
@@ -82,7 +82,7 @@ class Failing(Tool):
 
 class CBA(Tool):
     def __init__(self):
-        super().__init__('clang-build-time-analyzer-run.sh', 'cbta', 'build/clang-build-analyser',
+        super().__init__('clang-build-time-analyzer-run.sh.DUPA', 'cbta', 'build/clang-build-analyser',
                          ['cba-result.txt'
                          ,'cba-trace.txt.txz'],
                          kpis='kpis.txt', kpis_descr=['T parsing', 'T codegen'])
@@ -122,10 +122,10 @@ class Checkout:
         self.tool_results = tool_results
 
 TOOLS_PROD = [
-        LOC()       # Light
+        TidyCXX()   # Super heavy
+    ,   LOC()       # Light
     ,   CBA()       # Heavy
     ,   IWYU()
-    ,   TidyCXX()
     ,   TidyC()
     ,   Failing()   # Test handling of failing report
     #,   Doxygen()  # TODO
@@ -150,6 +150,7 @@ def GetDirThis():
 def GetParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--num-back', default=5, type=int, help="How many checkouts from head")
+    parser.add_argument('-j', '--num-threads', default=1, type=int, help="How threads")
     parser.add_argument('-r', '--report-only', default=False, action='store_true', help="Only generate report from the available data")
     parser.add_argument('-c', '--disable-cache', default=False, action='store_true', help="Disable cache")
     parser.add_argument('-l', '--leave-faulty', default=False, action='store_true', help="Leave the faulty reports and don't retry generating them")
@@ -261,7 +262,8 @@ def LoopIter(args, git_hash, tool):
 def GetResultsForCheckout(args, git_hash, date_str):
     tool_results = []
 
-    for tool in TOOLS:
+    if args.num_threads <= 1:
+        for tool in TOOLS:
     
     for tool in TOOLS:
         kpis = LoopIter(args, git_hash, tool)
@@ -269,6 +271,12 @@ def GetResultsForCheckout(args, git_hash, date_str):
 
             kpis = LoopIter(args, git_hash, tool)
             tool_results.append(kpis)
+    else:
+        data = []
+        for tool in TOOLS:
+            data.append((args, git_hash, tool))
+        with multiprocessing.Pool(args.num_threads) as pool:
+            tool_results = pool.starmap(LoopIter, data)
 
     return tool_results
 
