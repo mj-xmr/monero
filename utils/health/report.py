@@ -48,6 +48,9 @@ class Tool:
 
     def GetKPIs(self, res):
         return res
+    
+    def IsRunnable(self):
+        return True
 
     def IsSingleThreaded(self):
         return False
@@ -82,10 +85,13 @@ class Failing(Tool):
 
 class CBA(Tool):
     def __init__(self):
-        super().__init__('clang-build-time-analyzer-run.sh.DUPA', 'cbta', 'build/clang-build-analyser',
+        super().__init__('clang-build-time-analyzer-run.sh', 'cbta', 'build/clang-build-analyser',
                          ['cba-result.txt'
                          ,'cba-trace.txt.txz'],
                          kpis='kpis.txt', kpis_descr=['T parsing', 'T codegen'])
+        
+    def IsRunnable(self):
+        return False
 
 
 class TidyC(Tool):
@@ -123,10 +129,10 @@ class Checkout:
 
 TOOLS_PROD = [
         TidyCXX()   # Super heavy
+    ,   TidyC()
     ,   LOC()       # Light
     ,   CBA()       # Heavy
     ,   IWYU()
-    ,   TidyC()
     ,   Failing()   # Test handling of failing report
     #,   Doxygen()  # TODO
     ,   Files()     # Light
@@ -150,7 +156,7 @@ def GetDirThis():
 def GetParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--num-back', default=5, type=int, help="How many checkouts from head")
-    parser.add_argument('-j', '--num-threads', default=1, type=int, help="How threads")
+    parser.add_argument('-j', '--num-threads', default=1, type=int, help="How many threads")
     parser.add_argument('-r', '--report-only', default=False, action='store_true', help="Only generate report from the available data")
     parser.add_argument('-c', '--disable-cache', default=False, action='store_true', help="Disable cache")
     parser.add_argument('-l', '--leave-faulty', default=False, action='store_true', help="Leave the faulty reports and don't retry generating them")
@@ -163,6 +169,9 @@ def GetResultsForTool(tool):
     #pathTool = tool.path
     result = subprocess.run([pathTool], stdout=subprocess.PIPE)
 
+    if not tool.IsRunnable():
+        raise ValueError("Tool not runnable {}".format(tool.name))
+ 
     if result.returncode != 0:
         raise ValueError("Return code {} for tool {}".format(result.returncode, tool.name))
 
