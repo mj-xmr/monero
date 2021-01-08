@@ -25,12 +25,17 @@ TAG_PLOT = '-plot'
 
 hyperlink_format = '<a href="{link}">{text}</a>'
 
+def GetDirThis():
+    return os.path.dirname(os.path.realpath(__file__))
+
+
 class Tool:
-    def __init__(self, name, alias, base_path, artifacts=[], kpis='', kpis_descr=[]):
+    def __init__(self, name, alias, base_path, artifacts=[], kpis='', kpis_descr=[], params=[]):
         self.name = name
         self.path = os.path.join("utils", "health", name)
         self.base_path = base_path
         self.alias = alias
+        self.params = params
         self.kpis_descr = self.ConvertStringToArrayOfStrings(kpis_descr)
         artifacts = self.ConvertStringToArrayOfStrings(artifacts)
         self.kpis = kpis
@@ -51,10 +56,10 @@ class Tool:
     
     def IsRunnable(self):
         return True
-
-    def IsSingleThreaded(self):
-        return False
     
+    def NeedsBuild(self):
+        return False
+
     def GetCell(self, git_hash, kpis):
         cell = ''
         for iart, artifact in enumerate(self.artifacts):
@@ -101,13 +106,6 @@ class TidyC(Tool):
                              , kpis='kpis.txt', kpis_descr='Lines of warnings'
                         )
 
-class TidyC(Tool):
-    def __init__(self):
-        super().__init__('clang-tidy-run-cc.sh', 'tidyC', "build/clang-tidy-C",
-                             ['clang-tidy-result-C.txt.txz']
-                             , kpis='kpis.txt', kpis_descr='Lines of warnings'
-                        )
-
 class TidyCXX(Tool):
     def __init__(self):
         super().__init__('clang-tidy-run-cpp.sh', 'tidyCXX', "build/clang-tidy-CXX",
@@ -119,6 +117,22 @@ class IWYU(Tool):
         super().__init__('clang-include-what-you-use-run.sh', 'iwyu', "build/clang-iwyu",
                          ['iwyu-result.txt.txz'],
                          kpis='kpis.txt', kpis_descr=['lines of warnings'])
+        
+class Doxygen(Tool):
+    def __init__(self):
+        super().__init__('doxygen.sh', 'doxygen', "build/doxygen",
+                         ['doxygen.tar.xz'],
+                         kpis='kpis.txt', kpis_descr=''
+                         )
+        
+class Valgrind(Tool):
+    def __init__(self):
+        super().__init__('valgrind-tests.sh', 'valgrind', "build/valgrind-output",
+                         ['valgrind-output.txz'],
+                         kpis='kpis.txt', kpis_descr=['time taken'], params=[os.path.join(GetDirThis(), 'valgrind-executable-list.txt')])
+        
+    def NeedsBuild(self):
+        return True
 
 
 class Checkout:
@@ -128,30 +142,27 @@ class Checkout:
         self.tool_results = tool_results
 
 TOOLS_PROD = [
-        TidyCXX()   # Super heavy
+        Valgrind()  # Super heavy
+    ,   TidyCXX()   # Super heavy
     ,   TidyC()
     ,   LOC()       # Light
     ,   CBA()       # Heavy
     ,   IWYU()
+    ,   Doxygen()   # Heavy on HDD
     ,   Failing()   # Test handling of failing report
-    #,   Doxygen()  # TODO
-    ,   Files()     # Light
-    ,   Failing()   # Test failing
-    #,   Doxygen()  # TODO
-    #,   Valgrind() # TODO
     ]
 
 TOOLS_TESTING = [
         LOC()       # Light
+    #,   Valgrind()  # Heavy
+    , Doxygen()
     ,   Files()     # Light
     ,   Failing()   # Test handling of failing report
-    ,   TidyC()
+    #,   TidyC()
     #,   TidyCXX()
+    ]
+
 TOOLS = []
-
-
-def GetDirThis():
-    return os.path.dirname(os.path.realpath(__file__))
 
 def GetParser():
     parser = argparse.ArgumentParser()
@@ -164,20 +175,23 @@ def GetParser():
 
     return parser
 
+def Build():
+    pathTool = os.path.join(GetDirThis(), 'build.sh')
+    subprocess.run([pathTool], stdout=subprocess.PIPE)
+
 def GetResultsForTool(tool):
     pathTool = os.path.join(GetDirThis(), tool.name)
     #pathTool = tool.path
-    result = subprocess.run([pathTool], stdout=subprocess.PIPE)
-
-    if not tool.IsRunnable():
-        raise ValueError("Tool not runnable {}".format(tool.name))
+    if tool.IsRunnable():
+        if tool.NeedsBuild():
+            Build()
+        result = subprocess.run([pathTool] + tool.params, stdout=subprocess.PIPE)
+        if result.returncode != 0:
+            raise ValueError("Return code {} for tool {}".format(result.returncode, tool.name))
  
-    if result.returncode != 0:
-        raise ValueError("Return code {} for tool {}".format(result.returncode, tool.name))
-
-    for artifact in tool.artifacts:
-        if not os.path.isfile(artifact):
-            raise ValueError("No artifact {} for tool {}".format(artifact, tool.name))
+        for artifact in tool.artifacts:
+            if not os.path.isfile(artifact):
+                raise ValueError("No artifact {} for tool {}".format(artifact, tool.name))
 
     if tool.kpis:
         print(tool.name, "Opening:", tool.kpis)
@@ -199,6 +213,16 @@ def GetResultsForToolCached(args, git_hash, tool):
         use_cache = not args.disable_cache
         if use_cache and os.path.isfile(frep):
             print("Using cached", tool.name)
+            
+            if not tool.IsRunnable():
+                # TODO
+                if tool.kpis:
+                    if os.path.isfile(tool.kpis):
+                        shutil.move(tool.kpis, frep)
+                for artifact in tool.artifacts:
+                    MoveArtifacts(git_hash, artifact)
+                    
+                    
             with open(frep) as fin:
                 res = fin.readlines()[0]
 
@@ -228,6 +252,14 @@ def GetResultsForToolCached(args, git_hash, tool):
             fin.writelines([res])
 
         return res
+    
+def MoveArtifacts(git_hash, artifact):
+    if os.path.isfile(artifact):
+        dst = GetFilenameArtifact(git_hash, artifact)
+        CreateDirIfNotExists(dst)
+        #print("dst", dst)
+        shutil.move(artifact, dst)
+        #shutil.copy(artifact, dst)
 
 def ProcessTool(args, tool, git_hash):
     if args.report_only:
@@ -237,15 +269,10 @@ def ProcessTool(args, tool, git_hash):
 
     for artifact in tool.artifacts:
         if os.path.isfile(artifact):
-            dst = GetFilenameArtifact(git_hash, artifact)
-            CreateDirIfNotExists(dst)
-            #print("dst", dst)
-            shutil.move(artifact, dst)
-            #shutil.copy(artifact, dst)
+            MoveArtifacts(git_hash, artifact)
         else:
             res = '-2'
             print("Source artifact", artifact, "not available! Error code", res)
-        print(e)
         
     return res
     
@@ -273,11 +300,6 @@ def GetResultsForCheckout(args, git_hash, date_str):
 
     if args.num_threads <= 1:
         for tool in TOOLS:
-    
-    for tool in TOOLS:
-        kpis = LoopIter(args, git_hash, tool)
-        tool_results.append(kpis)
-
             kpis = LoopIter(args, git_hash, tool)
             tool_results.append(kpis)
     else:
@@ -309,7 +331,15 @@ def PlotKPI(name, vals):
     fig = plt.figure()
     #data = list(reversed(vals))
     data = list(vals)
-    print("Plotting", data)
+    print("Plotting", name, data)
+    # Equalize the dimensions
+    maxDim = 0
+    for ele in data:
+        if len(ele) > maxDim:
+            maxDim = len(ele)
+    for ele in data:
+        if len(ele) < maxDim:
+            ele.append(0)
     plt.plot(data)
     plt.title(name)
     plt.grid()
@@ -360,8 +390,7 @@ def AddHeader(rep_html):
     <h1>Monero statistics from {}</h1>
     <p>The headers are links to plots of a given tool's KPIs (Key Performance Index).
      The table cell links point to a given tool's artifact(s).
-     The numbers are the KPIs. Negative numbers are error codes. The tools are: LinesOfCode, ClangBuildAnalyser, Include-What-You-Use, 
-     Clang-Tidy, and a test script. Beware of the unpacked size of some of the artifacts. Clang-Tidy-CXX weights over 500 MB! 
+     The numbers are the KPIs. Negative numbers are error codes. The tools are: Valgrind, Doxygen, Clang-Tidy, LinesOfCode, ClangBuildAnalyser, Include-What-You-Use, and a test script. Beware of the unpacked size of some of the artifacts. Clang-Tidy-CXX weights over 500 MB! 
      Unpack the .txz files with: 'tar -xvf artifact.txt.txz'.
      </p>
     """.format(timestamp)
@@ -418,6 +447,7 @@ def GetKPIs(checkouts):
     return tool_kpi
 
 def MakeReport(checkouts):
+    print("Generating report for {} checkouts".format(len(checkouts)))
     table = CreateTable(checkouts)
     tool_kpi = GetKPIs(checkouts)
 
@@ -483,7 +513,7 @@ def Main():
         result_date_str = result_date.stdout.decode('utf-8')
         print("Git ID", result_hash_str, result_date_str)
         reports = GetResultsForCheckout(args, result_hash_str, result_date_str)
-        if (all(i != '0' for i in reports)):
+        if (any(int(i.strip().replace(" ", "")) > 0 for i in reports)):
             checkouts.append(Checkout(result_hash_str, result_date_str, reports))
 
         time_passed = time.time() - start

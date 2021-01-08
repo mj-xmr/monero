@@ -1,0 +1,2 @@
+build/release/tests/core_tests/core_tests --generate_and_play_test_data
+build/release/tests/unit_tests/unit_tests

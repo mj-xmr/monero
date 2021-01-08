@@ -40,7 +40,8 @@ if [ "$#" -ne 1 ]; then
 fi
 
 FILE_IN="$1"
-DIR_OUT="build/valgrind-output" # Using build as the base output directory, as it's ignored in .gitignore
+DIR_VALGRIND="valgrind-output"
+DIR_OUT="build/${DIR_VALGRIND}" # Using build as the base output directory, as it's ignored in .gitignore
 
 function is_file_or_exit {
 	FILE="${1}"
@@ -147,6 +148,8 @@ is_tool_or_exit valgrind
 is_file_or_exit "$FILE_IN"
 echo "All OK."
 echo "Will perform checks for the following executables and their arguments:"
+SECONDS=0
+
 while IFS= read -r line; do
     echo "$line"
 done < "$FILE_IN"
@@ -157,5 +160,12 @@ while IFS= read -r line; do
     run_valgrind_4_executable_all "$line"
 done < "$FILE_IN"
 
-echo "Done. All data saved in ${DIR_OUT}"
+cd build
+ARCHIVE="${DIR_VALGRIND}.txz"
+tar -cJvf "${ARCHIVE}" "${DIR_VALGRIND}"
+mv "${ARCHIVE}" "${DIR_VALGRIND}"
+cd "${DIR_VALGRIND}"
+echo $SECONDS > "kpis.txt"
+
+echo "Done. All data saved in ${DIR_VALGRIND}.txz"
 
