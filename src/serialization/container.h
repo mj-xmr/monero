@@ -38,45 +38,19 @@ namespace serialization
       return ::do_serialize(ar, e);
     }
 
-#if 0
-    template <typename Archive, typename T, typename = std::enable_if<std::numeric_limits<T>::is_integer>, typename = std::enable_if<std::is_unsigned<T>::value>>
-    bool serialize_container_element(Archive& ar, T& e)
+    template <typename Archive>
+    bool serialize_container_element(Archive& ar, uint32_t& e)
     {
-      typedef char constraint[std::alignment_of<T>::value> - 2];
       ar.serialize_varint(e);
       return true;
     }
-    template <typename Archive, typename T, typename = std::enable_if<std::numeric_limits<T>::is_integer>, typename = std::enable_if<std::is_signed<T>::value>>
-    bool serialize_container_element(Archive& ar, T& e)
+
+    template <typename Archive>
+    bool serialize_container_element(Archive& ar, uint64_t& e)
     {
-      return serialize_container_element(ar, *(typename boost::make_unsigned<signed_type>::T *)(&e));
+      ar.serialize_varint(e);
+      return true;
     }
-#else
-
-#define CONTAINER_VARINT_SERIALIZER(type) \
-    template <typename Archive> \
-    bool serialize_container_element(Archive& ar, type& e) \
-    { \
-      ar.serialize_varint(e); \
-      return true; \
-    }
-
-#define CONTAINER_VARINT_SERIALIZER_2(signed_type, unsigned_type) \
-  CONTAINER_VARINT_SERIALIZER(unsigned_type) \
-  template<typename Archive> \
-  bool serialize_container_element(Archive& ar, signed_type& e) \
-  { \
-    return serialize_container_element(ar, *(typename boost::make_unsigned<signed_type>::type *)(&e)); \
-  }
-
-CONTAINER_VARINT_SERIALIZER_2(int64_t, uint64_t)
-CONTAINER_VARINT_SERIALIZER_2(int32_t, uint32_t)
-CONTAINER_VARINT_SERIALIZER_2(int16_t, uint16_t)
-#ifdef __APPLE__
-CONTAINER_VARINT_SERIALIZER_2(ssize_t, size_t)
-#endif
-
-#endif
 
     template <typename C>
     void do_reserve(C &c, size_t N) {}
