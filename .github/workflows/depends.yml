@@ -74,8 +74,10 @@ jobs:
         sudo update-alternatives --set ${{ matrix.toolchain.host }}-gcc $(which ${{ matrix.toolchain.host }}-gcc-posix)
     - name: build
       run: |
+        ls /home/runner/work/monero/monero/contrib/depends/x86_64-unknown-freebsd/native/bin/ || true
         ccache --max-size=150M
         make depends target=${{ matrix.toolchain.host }} -j2
+        ls /home/runner/work/monero/monero/contrib/depends/x86_64-unknown-freebsd/native/bin/ || true
     - uses: actions/upload-artifact@v2
       if: ${{ matrix.toolchain.host == 'x86_64-w64-mingw32' || matrix.toolchain.host == 'x86_64-apple-darwin11' || matrix.toolchain.host == 'x86_64-unknown-linux-gnu' }}
       with:

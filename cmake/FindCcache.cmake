@@ -48,9 +48,9 @@ set(PROG ccache)
 #	set(PROG $ENV{CCACHE})
 #endif()
 #if (NOT CCACHE_FOUND)
-set(CCACHE_FOUND /home/runner/work/monero/monero/contrib/depends/x86_64-unknown-freebsd/native/bin/ccache)
+#set(CCACHE_FOUND /home/runner/work/monero/monero/contrib/depends/x86_64-unknown-freebsd/native/bin/ccache)
 
-#find_program(CCACHE_FOUND ${PROG})
+find_program(CCACHE_FOUND ${PROG})
 if (CCACHE_FOUND)
 	# Try to compile a test program with ccache, in order to verify if it really works. (needed on exotic setups)
 	# Create a temporary file with a simple program.
