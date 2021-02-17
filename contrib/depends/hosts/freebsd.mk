@@ -3,6 +3,7 @@ freebsd_CXX=clang++-8
 freebsd_AR=ar
 freebsd_RANLIB=ranlib
 freebsd_NM=nm
+freebsd_CCACHE=ccache
 
 freebsd_CFLAGS=-pipe
 freebsd_CXXFLAGS=$(freebsd_CFLAGS)
