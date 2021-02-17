@@ -39,7 +39,12 @@
 #  GLOBAL PROPERTY RULE_LAUNCH_COMPILE     set to ccache, when ccache found
 #  GLOBAL PROPERTY RULE_LAUNCH_LINK        set to ccache, when ccache found
 
-find_program(CCACHE_FOUND ccache)
+set(PROG ccache)
+if(DEFINED ENV{CCACHE})
+	# Allow overriding
+	set(PROG ENV{CCACHE})
+endif()
+find_program(CCACHE_FOUND ${PROG})
 if (CCACHE_FOUND)
 	# Try to compile a test program with ccache, in order to verify if it really works. (needed on exotic setups)
 	# Create a temporary file with a simple program.
@@ -53,8 +58,8 @@ if (CCACHE_FOUND)
 		set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_FOUND}")
 		set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK    "${CCACHE_FOUND}")
 	else()
-		message(STATUS "Found ccache ${CCACHE_FOUND}, but is UNUSABLE! Return code: ${RET}")
+		message(STATUS "Found ${PROG} ${CCACHE_FOUND}, but is UNUSABLE! Return code: ${RET}")
 	endif()
 else()
-	message(STATUS "ccache NOT found! Please install it for faster rebuilds.")
+	message(STATUS "${PROG} NOT found! Please install it for faster rebuilds.")
 endif()
