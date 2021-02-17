@@ -40,9 +40,10 @@
 #  GLOBAL PROPERTY RULE_LAUNCH_LINK        set to ccache, when ccache found
 
 set(PROG ccache)
-if(DEFINED ENV{CCACHE})
+if (NOT "$ENV{CCACHE}" STREQUAL "")
 	# Allow overriding
-	set(PROG ENV{CCACHE})
+	message(STATUS "Found ENV VAR ccache: $ENV{CCACHE}")
+	set(PROG $ENV{CCACHE})
 endif()
 find_program(CCACHE_FOUND ${PROG})
 if (CCACHE_FOUND)
