@@ -195,3 +195,42 @@ TEST(logging, multiline)
   cleanup();
 }
 
+// These operations might segfault
+TEST(logging, copy_ctor_segfault)
+{
+    const el::Logger log1("id1", nullptr);
+    const el::Logger log2(log1);
+}
+
+TEST(logging, operator_equals_segfault)
+{
+    const el::Logger log1("id1", nullptr);
+    el::Logger log2("id2", nullptr);
+    log2 = log1;
+}
+
+TEST(logging, copy_ctor_configurations_segfault)
+{
+    /*
+    Still segfaults
+    
+    el::Logger log1("id1", nullptr);
+    const el::Configurations cfg;
+    log1.configure(cfg);
+    const el::Logger log2(log1);
+    */
+}
+
+TEST(logging, operator_equals_configurations_segfault)
+{
+    /*
+    //Still segfaults
+
+    el::Logger log1("id1", nullptr);
+    const el::Configurations cfg;
+    log1.configure(cfg);
+    el::Logger log2("id2", nullptr);
+    log2 = log1;
+    */
+}
+
