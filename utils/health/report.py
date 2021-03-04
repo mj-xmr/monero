@@ -61,11 +61,26 @@ class Tool:
         return False
 
     def GetCell(self, git_hash, kpis):
+        kpisOK = True
+        try:
+            kpi = kpis.strip().split(' ')[0]
+            print("KPI = ", kpi)
+            kpiVal = float(kpi)
+            if kpiVal <= 0:
+                kpisOK = False
+        except:
+            kpisOK = False
+        
         cell = ''
+        sep = ' '
         for iart, artifact in enumerate(self.artifacts):
-            link = GetFilenameArtifactRelative(git_hash, artifact)
             link_txt = "-{}-".format(iart+1)
-            cell += hyperlink_format.format(link=link, text=link_txt) + " "
+            if kpisOK:
+                link = GetFilenameArtifactRelative(git_hash, artifact)
+                cell += hyperlink_format.format(link=link, text=link_txt) + sep
+            else:
+                cell += link_txt + sep
+            
         cell += kpis
 
         return cell
