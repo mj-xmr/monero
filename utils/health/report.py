@@ -178,6 +178,7 @@ TOOLS_TESTING = [
     ]
 
 TOOLS = []
+TOOLS_DIC = {}
 
 def GetParser():
     parser = argparse.ArgumentParser()
@@ -342,11 +343,11 @@ def GetFilenameToolPNG(tool_name):
 def all_equal2(iterator):
     return len(set(iterator)) <= 1
 
-def PlotKPI(name, vals):
+def PlotKPI(alias, vals):
     fig = plt.figure()
     #data = list(reversed(vals))
     data = list(vals)
-    print("Plotting", name, data)
+    print("Plotting", alias, data)
     # Equalize the dimensions
     maxDim = 0
     for ele in data:
@@ -356,9 +357,14 @@ def PlotKPI(name, vals):
         if len(ele) < maxDim:
             ele.append(0)
     plt.plot(data)
-    plt.title(name)
+    plt.title(alias)
+    plt.xlabel('HEAD~x')
+    tool = TOOLS_DIC[alias]
+    if len(tool.kpis_descr):
+        plt.legend(tool.kpis_descr)
+    
     plt.grid()
-    plt.savefig('{}/{}'.format(dirImg, GetFilenameToolPNG(name)))
+    plt.savefig('{}/{}'.format(dirImg, GetFilenameToolPNG(alias)))
     plt.close(fig)
 
 def GetToolHashKey(git_hash, tool_key):
@@ -490,6 +496,7 @@ def FormatMinutes(seconds):
 
 def Main():
     global TOOLS
+    global TOOLS_DIC
 
     for dir_ini in (dirOut, dirImg, dirData):
         os.makedirs(dir_ini, exist_ok=True)
@@ -506,6 +513,9 @@ def Main():
         TOOLS = TOOLS_TESTING
     else:
         TOOLS = TOOLS_PROD
+        
+    for tool in TOOLS:
+        TOOLS_DIC[tool.alias] = tool
 
     checkouts = []
 
