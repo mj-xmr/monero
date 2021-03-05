@@ -328,7 +328,7 @@ private:
       uint64_t m_block_height;
       cryptonote::transaction_prefix m_tx;
       crypto::hash m_txid;
-      size_t m_internal_output_index;
+      uint64_t m_internal_output_index;
       uint64_t m_global_output_index;
       bool m_spent;
       bool m_frozen;
@@ -339,7 +339,7 @@ private:
       bool m_rct;
       bool m_key_image_known;
       bool m_key_image_request; // view wallets: we want to request it; cold wallets: it was requested
-      size_t m_pk_index;
+      uint64_t m_pk_index;
       cryptonote::subaddress_index m_subaddr_index;
       bool m_key_image_partial;
       std::vector<rct::key> m_multisig_k;
