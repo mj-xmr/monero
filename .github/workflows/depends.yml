@@ -14,7 +14,7 @@ jobs:
         toolchain:
           - name: "ARM v8-Mac"
             host: "aarch64-apple-darwin11"
-            packages: "cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
+            packages: "cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git g++-aarch64-linux-gnu binutils-aarch64-linux-gnu"
             osx_sdk: "10.11"
     name: ${{ matrix.toolchain.name }}
     steps:
@@ -36,13 +36,13 @@ jobs:
         echo "Acquire::http::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
         echo "Acquire::ftp::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
     - name: install dependencies
-      run: sudo apt update; sudo apt -y install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu libtool cmake autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache ${{ matrix.toolchain.packages }}
+      run: sudo apt update; sudo apt -y install libtool cmake autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ${{ matrix.toolchain.packages }}
     - name: prepare apple-darwin11
       if: ${{ matrix.toolchain.host == 'aarch64-apple-darwin11' }}
       run: |
         mkdir -p contrib/depends/SDKs contrib/depends/sdk-sources
         if [ ! -f contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.xz ]; then curl --location --fail https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.xz -o contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz; fi
-        tar -C contrib/depends/SDKs -xvf contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz
+        tar -C contrib/depends/SDKs -xf contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz
     - name: prepare w64-mingw32
       if: ${{ matrix.toolchain.host == 'x86_64-w64-mingw32' || matrix.toolchain.host == 'i686-w64-mingw32' }}
       run: |
