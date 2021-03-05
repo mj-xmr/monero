@@ -18,7 +18,7 @@ endef
 define $(package)_preprocess_cmds
   cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux/ &&\
   patch -p1 < $($(package)_patch_dir)/fix-whitespace.patch &&\
-  patch < $($(package)_patch_dir)/cross-compiling.patch
+  patch < /home/runner/work/monero/monero/contrib/depends/patches/libiconv/cross-compiling.patch
 endef
 
 define $(package)_config_cmds
