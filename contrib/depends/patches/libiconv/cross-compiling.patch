@@ -1,5 +1,5 @@
---- preload/configure	2017-01-02 00:03:35.000000000 +0100
-+++ preload/configure.new	2021-03-05 18:39:52.589969039 +0100
+--- a/preload/configure	2017-01-02 00:03:35.000000000 +0100
++++ b/preload/configure	2021-03-05 18:39:52.589969039 +0100
 @@ -1200,7 +1200,7 @@
      cross_compiling=yes
    fi
