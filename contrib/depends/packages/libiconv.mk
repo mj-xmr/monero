@@ -6,6 +6,7 @@ $(package)_sha256_hash=ccf536620a45458d26ba83887a983b96827001e92a13847b45e4925cc
 $(package)_patches=fix-whitespace.patch
 
 define $(package)_set_vars
+  $(package)_config_opts=--target=$(host)
   $(package)_config_opts=--disable-nls
   $(package)_config_opts=--enable-static
   $(package)_config_opts=--disable-shared
