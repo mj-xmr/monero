@@ -106,6 +106,16 @@ namespace
         entry.suggested_confirmations_threshold = std::max(entry.suggested_confirmations_threshold, (unlock_time - now + DIFFICULTY_TARGET_V2 - 1) / DIFFICULTY_TARGET_V2);
     }
   }
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool is_valid_language(const std::string &language)
+  {
+    std::vector<std::string> language_list;
+    std::vector<std::string> language_list_en;
+    crypto::ElectrumWords::get_language_list(language_list);
+    crypto::ElectrumWords::get_language_list(language_list_en, true);
+    return (std::find(language_list.begin(), language_list.end(), language) != language_list.end() ||
+        std::find(language_list_en.begin(), language_list_en.end(), language) != language_list_en.end());
+  }
 }
 
 namespace tools
@@ -3144,17 +3154,7 @@ namespace tools
     }
     std::string wallet_file = req.filename.empty() ? "" : (m_wallet_dir + "/" + req.filename);
     {
-      std::vector<std::string> languages;
-      crypto::ElectrumWords::get_language_list(languages, false);
-      std::vector<std::string>::iterator it;
-
-      it = std::find(languages.begin(), languages.end(), req.language);
-      if (it == languages.end())
-      {
-        crypto::ElectrumWords::get_language_list(languages, true);
-        it = std::find(languages.begin(), languages.end(), req.language);
-      }
-      if (it == languages.end())
+      if (!is_valid_language(req.language))
       {
         er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
         er.message = "Unknown language: " + req.language;
@@ -3572,6 +3572,17 @@ namespace tools
       return false;
     }
 
+    if (!req.language.empty())
+    {
+      if (!is_valid_language(req.language))
+      {
+        er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+        er.message = "The specified seed language is invalid.";
+        return false;
+      }
+      wal->set_seed_language(req.language);
+    }
+
     // set blockheight if given
     try
     {
@@ -3715,12 +3726,7 @@ namespace tools
         er.message = "Wallet was using the old seed language. You need to specify a new seed language.";
         return false;
       }
-      std::vector<std::string> language_list;
-      std::vector<std::string> language_list_en;
-      crypto::ElectrumWords::get_language_list(language_list);
-      crypto::ElectrumWords::get_language_list(language_list_en, true);
-      if (std::find(language_list.begin(), language_list.end(), req.language) == language_list.end() &&
-          std::find(language_list_en.begin(), language_list_en.end(), req.language) == language_list_en.end())
+      if (!is_valid_language(req.language))
       {
         er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
         er.message = "Wallet was using the old seed language, and the specified new seed language is invalid.";
