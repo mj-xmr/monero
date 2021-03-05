@@ -13,8 +13,8 @@ jobs:
       matrix:
         toolchain:
           - name: "ARM v8-Mac"
-            host: "aarch64-apple-darwin11"
-            packages: "cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git g++-aarch64-linux-gnu binutils-aarch64-linux-gnu"
+            host: "arm-apple-darwin11"
+            packages: "cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git g++-arm-linux-gnueabihf"
             osx_sdk: "10.11"
     name: ${{ matrix.toolchain.name }}
     steps:
@@ -29,7 +29,7 @@ jobs:
     - name: install dependencies
       run: sudo apt update; sudo apt -y install libtool cmake autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ${{ matrix.toolchain.packages }}
     - name: prepare apple-darwin11
-      if: ${{ matrix.toolchain.host == 'aarch64-apple-darwin11' }}
+      if: ${{ matrix.toolchain.host == 'arm-apple-darwin11' }}
       run: |
         mkdir -p contrib/depends/SDKs contrib/depends/sdk-sources
         if [ ! -f contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.xz ]; then curl --location --fail https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.xz -o contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz; fi
@@ -41,10 +41,9 @@ jobs:
         sudo update-alternatives --set ${{ matrix.toolchain.host }}-gcc $(which ${{ matrix.toolchain.host }}-gcc-posix)
     - name: build
       run: |
-        sudo apt purge gcc g++
         make depends target=${{ matrix.toolchain.host }} -j2
     - uses: actions/upload-artifact@v2
-      if: ${{ matrix.toolchain.host == 'x86_64-w64-mingw32' || matrix.toolchain.host == 'aarch64-apple-darwin11' || matrix.toolchain.host == 'x86_64-unknown-linux-gnu' }}
+      if: ${{ matrix.toolchain.host == 'x86_64-w64-mingw32' || matrix.toolchain.host == 'arm-apple-darwin11' || matrix.toolchain.host == 'x86_64-unknown-linux-gnu' }}
       with:
         name: ${{ matrix.toolchain.name }}
         path: |
