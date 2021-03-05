@@ -41,8 +41,8 @@ jobs:
       if: ${{ matrix.toolchain.host == 'aarch64-apple-darwin11' }}
       run: |
         mkdir -p contrib/depends/SDKs contrib/depends/sdk-sources
-        if [ ! -f contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz ]; then curl --location --fail https://bitcoincore.org/depends-sources/sdks/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz -o contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz; fi
-        if [ -f contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz ]; then tar -C contrib/depends/SDKs -xf contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz; fi
+        if [ ! -f contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.xz ]; then curl --location --fail https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.xz -o contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz; fi
+        tar -C contrib/depends/SDKs -xvf contrib/depends/sdk-sources/MacOSX${{ matrix.toolchain.osx_sdk }}.sdk.tar.gz
     - name: prepare w64-mingw32
       if: ${{ matrix.toolchain.host == 'x86_64-w64-mingw32' || matrix.toolchain.host == 'i686-w64-mingw32' }}
       run: |
