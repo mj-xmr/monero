@@ -337,7 +337,7 @@ namespace boost
     if (x.rangeSigs.empty())
     {
       a & x.bulletproofs;
-      if (ver >= 2)
+      if (ver >= 2u)
         a & x.bulletproofs_plus;
     }
     a & x.MGs;
@@ -367,7 +367,7 @@ namespace boost
     if (x.p.rangeSigs.empty())
     {
       a & x.p.bulletproofs;
-      if (ver >= 2)
+      if (ver >= 2u)
         a & x.p.bulletproofs_plus;
     }
     a & x.p.MGs;
