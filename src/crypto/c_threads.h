@@ -30,6 +30,7 @@
 #pragma once
 
 #ifdef _WIN32
+#define _WIN32_WINNT _WIN32_WINNT_WIN7
 #include <windows.h>
 #include <synchapi.h>
 #define CTHR_MUTEX_TYPE	HANDLE
