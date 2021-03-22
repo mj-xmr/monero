@@ -139,6 +139,12 @@ class Doxygen(Tool):
                          ['doxygen.tar.xz'],
                          kpis='kpis.txt', kpis_descr=''
                          )
+class Lcov(Tool):
+    def __init__(self):
+        super().__init__('coverage.sh', 'lcov-UT', "build/coverage",
+                         ['unit-tests-lcov.tar.xz'],
+                         kpis='kpis.txt', kpis_descr=['% covered lines', '% covered functions']
+                         )
         
 class Valgrind(Tool):
     def __init__(self):
@@ -160,6 +166,7 @@ TOOLS_PROD = [
         Valgrind()  # Super heavy
     ,   TidyCXX()   # Super heavy
     ,   TidyC()
+    ,   Lcov()
     ,   LOC()       # Light
     ,   CBA()       # Heavy
     ,   IWYU()
