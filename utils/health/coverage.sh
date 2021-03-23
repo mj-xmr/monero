@@ -78,7 +78,7 @@ find_prog $PROG_LCOV
 find_prog $PROG_GENHTML
 
 
-#build
+build
 
 report $PROJ_UT "ctest -R unit_tests"
 #report $PROJ_AT "ctest"
