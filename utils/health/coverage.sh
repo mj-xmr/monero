@@ -36,7 +36,7 @@ generate() {
 	$PROG_LCOV --add-tracefile "$FBASE" --add-tracefile "$FTEST" --output-file "$FTOTAL"
 	rm -rf "$DIR_REPORT"
 	mkdir -p "$DIR_REPORT"
-	$PROG_LCOV --remove "$FTOTAL" '/usr/include/*' '/usr/lib/*' '*/build/*' '/home/enjo/devel/lib/tree/*' -o "$FFLTR"
+	$PROG_LCOV --remove "$FTOTAL" '/usr/include/*' '/usr/lib/*' '*/build/*' '*tests/*' '/home/enjo/devel/lib/tree/*' -o "$FFLTR"
 	$PROG_GENHTML --ignore-errors source "$FFLTR" --legend --title $PROJ --output-directory="$DIR_REPORT" 2>&1 | tee "$LOG"
 	KPI_LINES=$(grep "  lines" 	"$LOG" | awk '{print $2}' | sed 's/.$//')
 	KPI_FUNCS=$(grep "  functions" 	"$LOG" | awk '{print $2}' | sed 's/.$//')
@@ -78,7 +78,7 @@ find_prog $PROG_LCOV
 find_prog $PROG_GENHTML
 
 
-build
+#build
 
 report $PROJ_UT "ctest -R unit_tests"
 #report $PROJ_AT "ctest"
