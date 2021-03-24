@@ -418,7 +418,7 @@ def AddHeader(rep_html):
     <h1>Monero statistics from {}</h1>
     <p>The headers are links to plots of a given tool's KPIs (Key Performance Index).
      The table cell links point to a given tool's artifact(s).
-     The numbers are the KPIs. Negative numbers are error codes. The tools are: Valgrind, Doxygen, Clang-Tidy, LinesOfCode, ClangBuildAnalyser, Include-What-You-Use, and a test script. Beware of the unpacked size of some of the artifacts. Clang-Tidy-CXX weights over 500 MB! 
+     The numbers are the KPIs. Negative numbers are error codes. The tools are: Valgrind, Doxygen, Clang-Tidy, LCov, LinesOfCode, ClangBuildAnalyser, Include-What-You-Use, and a test script. Beware of the unpacked size of some of the artifacts. Clang-Tidy-CXX weights over 500 MB! 
      Unpack the .txz files with: 'tar -xvf artifact.txt.txz'.
      </p>
     """.format(timestamp)
