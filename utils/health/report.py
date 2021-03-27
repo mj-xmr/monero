@@ -141,7 +141,7 @@ class Doxygen(Tool):
                          )
 class Lcov(Tool):
     def __init__(self):
-        super().__init__('coverage.sh', 'lcov-UT', "build/coverage",
+        super().__init__('coverage-ut.sh', 'lcov-UT', "build/coverage",
                          ['unit-tests-lcov.tar.xz'],
                          kpis='kpis.txt', kpis_descr=['% covered lines', '% covered functions']
                          )

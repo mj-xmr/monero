@@ -6,9 +6,6 @@ mkdir -p "${DIR_BUILD}" && cd "${DIR_BUILD}"
 PROG_LCOV="lcov"
 PROG_GENHTML="genhtml"
 
-PROJ_UT="unit-tests"
-PROJ_AT="all-tests"
-
 find_prog() {
 	PROG="$1"
 	if $(hash $PROG); then
@@ -77,9 +74,4 @@ report() {
 find_prog $PROG_LCOV
 find_prog $PROG_GENHTML
 
-
-build
-
-report $PROJ_UT "ctest -R unit_tests"
-#report $PROJ_AT "ctest"
 
