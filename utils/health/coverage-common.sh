@@ -17,8 +17,9 @@ find_prog() {
 }
 
 build() {
+    TARGET="$1"
 	cmake -S "../.." -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DUSE_CCACHE=ON -DUSE_UNITY=ON -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -DBoost_INCLUDE_DIR="/home/enjo/devel/lib/tree/include"
-	make
+	make $TARGET
 }
 
 zero() {
