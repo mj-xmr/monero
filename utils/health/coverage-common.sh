@@ -67,7 +67,7 @@ report() {
 	mkdir -p "$DIR_OUT"
 	
 	zero
-	$COMMAND
+	$COMMAND || true # Failing tests aren't a reason to abort the report generation
 	generate
 }
 
