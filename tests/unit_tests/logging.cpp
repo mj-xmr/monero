@@ -41,6 +41,14 @@ static void init()
   log_filename = p.string();
   mlog_configure(log_filename, false, 0);
 }
+static const int LOG_TESTS_FILE_SIZE = 1;
+static const int LOG_TESTS_FILE_NUMBER = 5;
+static void initMultiple()
+{
+  boost::filesystem::path p = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+  log_filename = p.string();
+  mlog_configure(log_filename, false, LOG_TESTS_FILE_SIZE, LOG_TESTS_FILE_NUMBER);
+}
 
 static void cleanup()
 {
@@ -192,6 +200,26 @@ TEST(logging, multiline)
   ASSERT_TRUE(str.find("third") != std::string::npos);
   ASSERT_TRUE(str.find("first\nsecond") == std::string::npos);
   ASSERT_TRUE(str.find("second\nthird") == std::string::npos);
+  cleanup();
+}
+
+TEST(logging, log_rotation)
+{
+  initMultiple();
+  for (int i = 0; i < LOG_TESTS_FILE_NUMBER * 1e3; ++i) // Force rotation
+  {
+      log();
+  }
+  
+  std::string str;
+  /*
+  ASSERT_TRUE(load_log_to_string(log_filename, str));
+  ASSERT_TRUE(str.find("global") != std::string::npos);
+  ASSERT_TRUE(str.find("fatal") != std::string::npos);
+  ASSERT_TRUE(str.find("error") != std::string::npos);
+  ASSERT_TRUE(str.find("debug") == std::string::npos);
+  ASSERT_TRUE(str.find("trace") == std::string::npos);
+  */
   cleanup();
 }
 

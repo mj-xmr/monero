@@ -59,7 +59,7 @@ static std::string generate_log_filename(const char *base)
   char tmp[200];
   struct tm tm;
   time_t now = time(NULL);
-  if (!epee::misc_utils::get_gmt_time(now, tm))
+  if (epee::misc_utils::get_gmt_time(now, tm))
     snprintf(tmp, sizeof(tmp), "part-%u", ++fallback_counter);
   else
     strftime(tmp, sizeof(tmp), "%Y-%m-%d-%H-%M-%S", &tm);
@@ -145,6 +145,7 @@ bool EnableVTMode()
 }
 #endif
 
+#include <iostream>
 void mlog_configure(const std::string &filename_base, bool console, const std::size_t max_log_file_size, const std::size_t max_log_files)
 {
   el::Configurations c;
@@ -169,8 +170,10 @@ void mlog_configure(const std::string &filename_base, bool console, const std::s
     if (ret < 0)
     {
       // can't log a failure, but don't do the file removal below
+      std::cout << "fAILEDS to remove " << name<< '\n';
       return;
     }
+    //std::cout << rname << '\n';
     if (max_log_files != 0)
     {
       std::vector<boost::filesystem::path> found_files;
@@ -183,10 +186,13 @@ void mlog_configure(const std::string &filename_base, bool console, const std::s
         if (filename.size() >= filename_base.size() && std::memcmp(filename.data(), filename_base.data(), filename_base.size()) == 0)
         {
           found_files.push_back(iter->path());
+          std::cout << found_files.back() << '\n';
         }
       }
+      std::cout << found_files.size() << " " << max_log_files << "  DUIPA\n";
       if (found_files.size() >= max_log_files)
       {
+          std::cout << found_files.size() << " " << max_log_files << "  Calka\n";
         std::sort(found_files.begin(), found_files.end(), [](const boost::filesystem::path &a, const boost::filesystem::path &b) {
           boost::system::error_code ec;
           std::time_t ta = boost::filesystem::last_write_time(boost::filesystem::path(a), ec);
