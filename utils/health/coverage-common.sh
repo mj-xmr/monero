@@ -5,6 +5,7 @@ mkdir -p "${DIR_BUILD}" && cd "${DIR_BUILD}"
 
 PROG_LCOV="lcov"
 PROG_GENHTML="genhtml"
+GEN="CodeBlocks - Unix Makefiles"
 
 find_prog() {
 	PROG="$1"
@@ -17,8 +18,8 @@ find_prog() {
 }
 
 build() {
-    MAKE_OPTIONS="$1"
-	cmake -S "../.." -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DUSE_CCACHE=ON -DUSE_UNITY=ON -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -DBoost_INCLUDE_DIR="/home/enjo/devel/lib/tree/include"
+	MAKE_OPTIONS="$1"
+	cmake -S "../.." -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DUSE_CCACHE=ON -DUSE_UNITY=ON -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -G "${GEN}" -DBoost_INCLUDE_DIR="/home/enjo/devel/lib/tree/include"
 	make $MAKE_OPTIONS
 }
 
