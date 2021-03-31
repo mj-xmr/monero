@@ -91,7 +91,7 @@ class Tool:
 
 class LOC(Tool):
     def __init__(self):
-        super().__init__('loc.sh', 'loc', '.', kpis='kpis.txt', kpis_descr=['Everything', 'Headers only'])
+        super().__init__('loc.sh', 'loc', 'build/loc', kpis='kpis.txt', kpis_descr=['Everything', 'Headers only'])
 
 class Files(Tool):
     def __init__(self):
