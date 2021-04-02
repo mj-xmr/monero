@@ -192,6 +192,7 @@ def GetParser():
     parser.add_argument('-n', '--num-back', default=5, type=int, help="How many checkouts from head")
     parser.add_argument('-j', '--num-threads', default=1, type=int, help="How many threads")
     parser.add_argument('-r', '--report-only', default=False, action='store_true', help="Only generate report from the available data")
+    parser.add_argument('-g', '--disable-git', default=False, action='store_true', help="Disable git operations")
     parser.add_argument('-c', '--disable-cache', default=False, action='store_true', help="Disable cache")
     parser.add_argument('-l', '--leave-faulty', default=False, action='store_true', help="Leave the faulty reports and don't retry generating them")
     parser.add_argument('-s', '--tools-testing', default=False, action='store_true', help="Use only the testing tools")
@@ -396,7 +397,7 @@ def ReplaceStyle(rep_html):
         rep_html = rep_html.replace(tag, "{} {}".format(tag, style))
     return rep_html
 
-def ReplaceToolsCells(checkouts, rep_html):
+def ReplaceToolsCells(rep_html, checkouts):
     for chk in checkouts:
         for itool, kpis in enumerate(chk.tool_results):
             tool_key = TOOLS[itool].alias
@@ -407,7 +408,7 @@ def ReplaceToolsCells(checkouts, rep_html):
 
     return rep_html
 
-def AddHeader(rep_html):
+def AddHeader(rep_html, checkouts):
     timestamp = time.strftime("%Y-%m-%d %H:%M")
     header = """<!DOCTYPE html>
     <html>
@@ -417,12 +418,16 @@ def AddHeader(rep_html):
     <body>
     <h1>Monero statistics from {}</h1>
     <p>The headers are links to plots of a given tool's KPIs (Key Performance Index).
-     The table cell links point to a given tool's artifact(s).
+     The table cell links point to a given tool's artifact(s). 
      The numbers are the KPIs. Negative numbers are error codes. The tools are: Valgrind, Doxygen, Clang-Tidy, LCov, LinesOfCode, ClangBuildAnalyser, Include-What-You-Use, and a test script. Beware of the unpacked size of some of the artifacts. Clang-Tidy-CXX weights over 500 MB! 
      Unpack the .txz files with: 'tar -xvf artifact.txt.txz'.
      </p>
     """.format(timestamp)
-    footer = "</body>"
+    footer = "<p>"
+    for chk in checkouts:
+        footer += " " + chk.git_hash
+    footer += "</p>"
+    footer += "</body>"
     return header + rep_html + footer   
 
 def CreateHeader():
@@ -487,8 +492,8 @@ def MakeReport(checkouts):
     rep_html, rep_text = GetReports(table, header)
     rep_html = ReplaceTitleLink(rep_html)
     rep_html = ReplaceStyle(rep_html)
-    rep_html = ReplaceToolsCells(checkouts, rep_html)
-    rep_html = AddHeader(rep_html)
+    rep_html = ReplaceToolsCells(rep_html, checkouts)
+    rep_html = AddHeader(rep_html, checkouts)
 
     #print(rep)
     print(rep_text)
@@ -535,9 +540,10 @@ def Main():
         print("\n" + spaces)
         print("HEAD~{}".format(head), "{}/{}".format(head+1, args.num_back),
               "Time: Average =", FormatMinutes(iterTimeAvg), "ETA =", FormatMinutes(timeLeft))
-        subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run(['git', 'checkout', 'HEAD'],   stdout=subprocess.DEVNULL)
-        subprocess.run(['git', 'checkout', 'HEAD~{}'.format(head)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if not args.disable_git:
+            subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(['git', 'checkout', 'HEAD'],   stdout=subprocess.DEVNULL)
+            subprocess.run(['git', 'checkout', 'HEAD~{}'.format(head)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         result_hash = subprocess.run(['git', 'log',  '--pretty=format:%h', '-n', '1'], stdout=subprocess.PIPE)
         result_date = subprocess.run(['git', 'show', '--format=%cs', '-s'], stdout=subprocess.PIPE)
 
@@ -554,7 +560,8 @@ def Main():
 
         print(spaces + "\n")
 
-    MakeReport(checkouts)
+    if args.report_only:
+        MakeReport(checkouts)
 
     end = time.time()
     diff = end - start
