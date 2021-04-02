@@ -1,7 +1,10 @@
 #!/bin/bash -e
 
 DIR_BUILD="build/coverage"
+rm "${DIR_BUILD}/*" -fr || true
 mkdir -p "${DIR_BUILD}" && cd "${DIR_BUILD}"
+
+DIR_BUILD_TMP="/tmp/monero/coverage"
 
 PROG_LCOV="lcov"
 PROG_GENHTML="genhtml"
@@ -19,7 +22,8 @@ find_prog() {
 
 build() {
 	MAKE_OPTIONS="$1"
-	cmake -S "../.." -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DUSE_CCACHE=ON -DUSE_UNITY=ON -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -G "${GEN}" -DBoost_INCLUDE_DIR="/home/enjo/devel/lib/tree/include"
+	cmake -S "../.." -B "$DIR_BUILD_TMP" -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DUSE_CCACHE=ON -DUSE_UNITY=ON -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -G "${GEN}" -DBoost_INCLUDE_DIR="/home/enjo/devel/lib/tree/include"
+	cd "$DIR_BUILD_TMP"
 	make $MAKE_OPTIONS
 }
 
@@ -39,7 +43,11 @@ generate() {
 	$PROG_GENHTML --ignore-errors source "$FFLTR" --legend --title $PROJ --output-directory="$DIR_REPORT" 2>&1 | tee "$LOG"
 	KPI_LINES=$(grep "  lines" 	"$LOG" | awk '{print $2}' | sed 's/.$//')
 	KPI_FUNCS=$(grep "  functions" 	"$LOG" | awk '{print $2}' | sed 's/.$//')
-	echo "$KPI_LINES $KPI_FUNCS" > "kpis.txt"
+	if [ -z "$var" ]; then
+		echo "$KPI_LINES $KPI_FUNCS" > "kpis.txt"
+	else
+		echo "-3" > "kpis.txt"
+	fi
 	echo "Report written to: $DIR_REPORT/index.html"
 	
 	if [ ! -L "$PROJ" ]; then
