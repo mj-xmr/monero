@@ -10,6 +10,7 @@ import subprocess
 import shutil
 import ntpath
 import time
+from dateutil import parser
 import multiprocessing
 
 from matplotlib import pyplot as plt
@@ -145,6 +146,8 @@ class Lcov(Tool):
                          ['unit-tests-lcov.tar.xz'],
                          kpis='kpis.txt', kpis_descr=['% covered lines', '% covered functions']
                          )
+    def IsRunnable(self):
+        return False
         
 class Valgrind(Tool):
     def __init__(self):
@@ -164,9 +167,9 @@ class Checkout:
 
 TOOLS_PROD = [
         Valgrind()  # Super heavy
-    ,   TidyCXX()   # Super heavy
     ,   TidyC()
     ,   Lcov()
+    ,   TidyCXX()   # Super heavy
     ,   LOC()       # Light
     ,   CBA()       # Heavy
     ,   IWYU()
@@ -434,6 +437,7 @@ def CreateHeader():
     header = []
     header.append("Commit")
     header.append("Date")
+    header.append("DOW")
     for tool in TOOLS:
         name = tool.alias
         header.append(name + TAG_PLOT)
@@ -446,6 +450,7 @@ def CreateTable(checkouts):
         row = []
         row.append(chk.git_hash)
         row.append(chk.date)
+        row.append(parser.parse(chk.date).weekday())
 
         for tool in TOOLS:
             tool_key = tool.alias

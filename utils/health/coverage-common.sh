@@ -1,10 +1,11 @@
 #!/bin/bash -e
 
-DIR_BUILD="build/coverage"
-rm "${DIR_BUILD}/*" -fr || true
-mkdir -p "${DIR_BUILD}" && cd "${DIR_BUILD}"
-
+DIR_CWD=`pwd`
 DIR_BUILD_TMP="/tmp/monero/coverage"
+DIR_BUILD="build/coverage"
+#rm "${DIR_BUILD}"/* -fr || true
+#rm "${DIR_BUILD_TMP}"/* -fr || true
+mkdir -p "${DIR_BUILD}" && cd "${DIR_BUILD}"
 
 PROG_LCOV="lcov"
 PROG_GENHTML="genhtml"
@@ -55,7 +56,10 @@ generate() {
 	fi
 	echo "Archiving the report..."
 	tar -cJhf "$ARCHIVE" "$PROJ"
+
 	echo "Archive stored to: `pwd`/$ARCHIVE"
+	cp -v $ARCHIVE "$DIR_CWD/$DIR_BUILD"
+	cp -v "kpis.txt" "$DIR_CWD/$DIR_BUILD"
 }
 
 report() {
