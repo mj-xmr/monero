@@ -426,7 +426,16 @@ def AddHeader(rep_html, checkouts):
      Unpack the .txz files with: 'tar -xvf artifact.txt.txz'.
      </p>
     """.format(timestamp)
-    footer = "<p>"
+    images = ""
+    for img_file in sorted(os.listdir(dirImg)):
+        if img_file.startswith('doxygen'):
+            continue
+        if img_file.startswith('failing'):
+            continue
+        images += "<img src='{}/{}'>".format(dirImgRel, img_file)
+    images += "\n<div style='clear:both;'></div>\n"
+    
+    footer = images + "<p>"
     for chk in checkouts:
         footer += " " + chk.git_hash
     footer += "</p>"
