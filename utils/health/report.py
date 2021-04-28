@@ -422,7 +422,7 @@ def AddHeader(rep_html, checkouts):
     <head>
       <title>Monero statistics</title>
     </head>
-    <body>
+    <body style="background-color:#008020;">
     <h1>Monero statistics from {}</h1>
     <p>The headers are links to plots of a given tool's KPIs (Key Performance Index).
      The table cell links point to a given tool's artifact(s). 
