@@ -59,6 +59,7 @@ cmake ../.. \
 -DCMAKE_CXX_COMPILER=clang++ \
 -DUSE_CCACHE=OFF \
 -DUSE_UNITY=ON \
+-DUSE_PCH=ON \
 -DUSE_COMPILATION_TIME_PROFILER=ON \
 -DBUILD_SHARED_LIBS=ON \
 -DBoost_INCLUDE_DIR="/home/enjo/devel/lib/tree/include" \

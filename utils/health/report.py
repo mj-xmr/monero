@@ -375,7 +375,11 @@ def PlotKPI(alias, vals):
         plt.legend(tool.kpis_descr)
     
     plt.grid()
-    plt.savefig('{}/{}'.format(dirImg, GetFilenameToolPNG(alias)))
+    fname = GetFilenameToolPNG(alias)
+    fpath = '{}/{}'.format(dirImg, fname)
+    plt.savefig(fpath)
+    cmd_negate = 'gm convert {0} -negate {0}'.format(fpath)
+    subprocess.run(cmd_negate.split(), stdout=subprocess.PIPE)
     plt.close(fig)
 
 def GetToolHashKey(git_hash, tool_key):
