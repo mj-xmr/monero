@@ -34,6 +34,7 @@ DIR_THIS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Build variables
 PROG="ClangBuildAnalyzer"
+CFG="$PROG.ini"
 PROG_PATH="$DIR_THIS/bin/$PROG"
 DIR_BUILD="build/clang-build-analyser"
 
@@ -53,6 +54,8 @@ fi
 
 mkdir -p "$DIR_BUILD" && cd "$DIR_BUILD"
 rm `find . -name "CMakeCache.txt"` || true
+rm "$CFG" || true
+ln -s "$DIR_THIS/$CFG" # Pass on the configuration for CBA, which is expected to be stored in the CWD
 
 cmake ../.. \
 -DCMAKE_C_COMPILER=clang \
