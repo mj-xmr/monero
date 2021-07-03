@@ -158,14 +158,19 @@ namespace trezor{
 // https://www.boost.org/doc/libs/release/libs/tti/doc/html/index.html
 // Inspecting if the class google::protobuf::Message has the method ByteSizeLong().
 BOOST_TTI_HAS_MEMBER_FUNCTION(ByteSizeLong);
-#define HAS_BYTE_SIZE_LONG has_member_function_ByteSizeLong<google::protobuf::Message, size_t>::value;
+
 #define PROTO_HEADER_SIZE 6
-  static size_t message_size(const google::protobuf::Message &req){
-    #ifdef HAS_BYTE_SIZE_LONG
+
+  template<typename T = google::protobuf::Message>
+  typename std::enable_if<  has_member_function_ByteSizeLong<T, size_t>::value, size_t>::type 
+    message_size(const google::protobuf::Message &req){
       return req.ByteSizeLong();
-    #else
-      return static_cast<size_t>(req.ByteSize()); // Deprecated    
-    #endif
+  }
+  
+  template<typename T = google::protobuf::Message>
+  typename std::enable_if< !has_member_function_ByteSizeLong<T, size_t>::value, size_t>::type 
+    message_size(const google::protobuf::Message &req){
+      return static_cast<size_t>(req.ByteSize()); // Deprecated
   }
 
   static size_t serialize_message_buffer_size(size_t msg_size) {
@@ -209,7 +214,7 @@ BOOST_TTI_HAS_MEMBER_FUNCTION(ByteSizeLong);
 #define REPLEN 64
 
   void ProtocolV1::write(Transport & transport, const google::protobuf::Message & req){
-    const auto msg_size = message_size(req);
+    const size_t msg_size = message_size(req);
     const auto buff_size = serialize_message_buffer_size(msg_size) + 2;
 
     epee::wipeable_string req_buff;
