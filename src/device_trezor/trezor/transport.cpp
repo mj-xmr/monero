@@ -162,14 +162,14 @@ BOOST_TTI_HAS_MEMBER_FUNCTION(ByteSizeLong);
 #define PROTO_HEADER_SIZE 6
 
   template<typename T = google::protobuf::Message>
-  typename std::enable_if<  has_member_function_ByteSizeLong<T, size_t>::value, size_t>::type 
-    message_size(const google::protobuf::Message &req){
+  typename std::enable_if<  has_member_function_ByteSizeLong<T, size_t>::value, size_t>::type
+  message_size(const google::protobuf::Message &req){
       return req.ByteSizeLong();
   }
-  
+
   template<typename T = google::protobuf::Message>
-  typename std::enable_if< !has_member_function_ByteSizeLong<T, size_t>::value, size_t>::type 
-    message_size(const google::protobuf::Message &req){
+  typename std::enable_if< !has_member_function_ByteSizeLong<T, size_t>::value, size_t>::type
+  message_size(const google::protobuf::Message &req){
       return static_cast<size_t>(req.ByteSize()); // Deprecated
   }
 
@@ -214,7 +214,7 @@ BOOST_TTI_HAS_MEMBER_FUNCTION(ByteSizeLong);
 #define REPLEN 64
 
   void ProtocolV1::write(Transport & transport, const google::protobuf::Message & req){
-    const size_t msg_size = message_size(req);
+    const auto msg_size = message_size(req);
     const auto buff_size = serialize_message_buffer_size(msg_size) + 2;
 
     epee::wipeable_string req_buff;
