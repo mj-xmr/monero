@@ -42,6 +42,7 @@
 #include "common/apply_permutation.h"
 #include "transport.hpp"
 #include "messages/messages-common.pb.h"
+#include <boost/tti/has_member_function.hpp>
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "device.trezor.transport"
@@ -154,10 +155,17 @@ namespace trezor{
   // Helpers
   //
 
+// https://www.boost.org/doc/libs/release/libs/tti/doc/html/index.html
+// Inspecting if the class google::protobuf::Message has the method ByteSizeLong().
+BOOST_TTI_HAS_MEMBER_FUNCTION(ByteSizeLong);
+#define HAS_BYTE_SIZE_LONG has_member_function_ByteSizeLong<google::protobuf::Message, size_t>::value;
 #define PROTO_HEADER_SIZE 6
-
   static size_t message_size(const google::protobuf::Message &req){
-    return req.ByteSizeLong();
+    #ifdef HAS_BYTE_SIZE_LONG
+      return req.ByteSizeLong();
+    #else
+      return static_cast<size_t>(req.ByteSize()); // Deprecated    
+    #endif
   }
 
   static size_t serialize_message_buffer_size(size_t msg_size) {
